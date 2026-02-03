@@ -1,1 +1,6 @@
 HELMET FOUNDATION
+
+Namespaces:
+{{- range .Values.helmet_foundation.projects }}
+    - {{ . }}
+{{- end }}

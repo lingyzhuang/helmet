@@ -178,6 +178,10 @@ go get github.com/redhat-appstudio/helmet/pkg/framework
 
 ## Examples
 
+### Complete Example Application
+
+See [`example/helmet-ex/`](example/helmet-ex/) for a comprehensive example demonstrating all framework features.
+
 ### Basic Installer
 
 ```go

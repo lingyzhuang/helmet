@@ -19,13 +19,15 @@ GITHUB_TOKEN ?= ${GITHUB_TOKEN:-}
 
 .default: build
 
+include example/helmet-ex/Makefile
+
 #
 # Build
 #
 
 # Build the application
-.PHONY: build
-build:
+.PHONY:: build
+build::
 	go build $(GOFLAGS) ./...
 
 #
@@ -51,12 +53,12 @@ tool-gh:
 test: test-unit
 
 # Runs the unit tests.
-.PHONY: test-unit
+.PHONY:: test-unit
 test-unit:
 	go test $(GOFLAGS_TEST) $(PKG) $(ARGS)
 
 # Uses golangci-lint to inspect the code base.
-.PHONY: lint
+.PHONY:: lint
 lint: tool-golangci-lint
 	golangci-lint run ./...
 
@@ -80,7 +82,7 @@ ifeq ($(strip $(GITHUB_TOKEN)),)
 endif
 
 # Creates a new GitHub release with GITHUB_REF_NAME.
-.PHONY: github-release-create
+.PHONY:: github-release-create
 github-release-create: tool-gh
 	gh release view $(GITHUB_REF_NAME) >/dev/null 2>&1 || \
 		gh release create --generate-notes $(GITHUB_REF_NAME)
@@ -89,3 +91,15 @@ github-release-create: tool-gh
 github-release: \
 	github-preflight \
 	github-release-create
+
+#
+# Show help
+#
+.PHONY:: help
+help::
+	@echo "Targets:"
+	@echo "  build           		- Build the package (default)"
+	@echo "  github-release-create	- Create GitHub release"
+	@echo "  lint            		- Run linting"
+	@echo "  test            		- Run tests"
+	@echo "  help            		- Show help"
