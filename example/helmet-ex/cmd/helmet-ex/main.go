@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/redhat-appstudio/helmet/api"
 	"github.com/redhat-appstudio/helmet/example/helmet-ex/installer"
-	"github.com/redhat-appstudio/helmet/pkg/api"
-	"github.com/redhat-appstudio/helmet/pkg/chartfs"
-	"github.com/redhat-appstudio/helmet/pkg/framework"
-	"github.com/redhat-appstudio/helmet/pkg/subcmd"
+	"github.com/redhat-appstudio/helmet/framework"
 )
 
 // Build-time variables (injected via ldflags)
@@ -21,8 +19,8 @@ func main() {
 	// 1. Create application context with metadata
 	appCtx := createAppContext()
 
-	// 2. Create filesystem abstraction with overlay support
-	cfs, err := createChartFS()
+	// 2. Get current working directory for local overrides
+	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -32,13 +30,14 @@ func main() {
 	mcpImage := buildMCPImage()
 
 	// 4. Create application with framework options
-	app, err := framework.NewApp(
+	// NewAppFromTarball handles TarFS, OverlayFS, ChartFS internally
+	app, err := framework.NewAppFromTarball(
 		appCtx,
-		cfs,
-		framework.WithIntegrations(subcmd.StandardModules()...),
+		installer.InstallerTarball,
+		cwd,
+		framework.WithIntegrations(framework.StandardIntegrations()...),
 		framework.WithMCPImage(mcpImage),
-		framework.WithMCPToolsBuilder(subcmd.StandardMCPToolsBuilder()),
-		framework.WithInstallerTarball(installer.InstallerTarball),
+		// Note: StandardMCPToolsBuilder is the default, no need to specify
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -79,27 +78,6 @@ operators, storage, networking, integrations, and product layers.`),
 	)
 }
 
-// createChartFS creates a ChartFS with overlay support, allowing local
-// filesystem overrides of embedded tarball content without rebuilding.
-func createChartFS() (*chartfs.ChartFS, error) {
-	// Create embedded tarball filesystem
-	tfs, err := framework.NewTarFS(installer.InstallerTarball)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create tarball filesystem: %w", err)
-	}
-
-	// Get current working directory for local overrides
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get working directory: %w", err)
-	}
-
-	// Create overlay: embedded (base) + local (override)
-	// This allows local development without rebuilding the binary
-	ofs := chartfs.NewOverlayFS(tfs, os.DirFS(cwd))
-
-	return chartfs.New(ofs), nil
-}
 
 // buildMCPImage constructs the container image reference for the MCP server.
 // Uses the commit ID for versioning when available, falls back to 'latest'.
