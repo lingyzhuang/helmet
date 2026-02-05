@@ -34,17 +34,23 @@ build:
 # Tools
 #
 
-# Installs golangci-lint.
-tool-golangci-lint: GOFLAGS =
+# Executes golangci-lint via go tool (version from go.mod).
+.PHONY: tool-golangci-lint
 tool-golangci-lint:
-	which golangci-lint || \
-		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+	@go tool golangci-lint --version
 
-# Installs GitHub CLI ("gh").
-tool-gh: GOFLAGS =
+# Requires GitHub CLI ("gh") to be available in PATH. By default it's installed in
+# GitHub Actions workflows, common workstation package managers.
+.PHONY: tool-gh
 tool-gh:
-	which gh || \
-		go install github.com/cli/cli/v2/cmd/gh@latest
+	@which gh >/dev/null 2>&1 || \
+		{ echo "Error: 'gh' not found in PATH."; exit 1; }
+	@gh --version
+
+# Executes goreleaser via go tool (version from go.mod).
+.PHONY: tool-goreleaser
+tool-goreleaser:
+	@go tool goreleaser --version
 
 #
 # Test and Lint
@@ -59,8 +65,8 @@ test-unit:
 
 # Uses golangci-lint to inspect the code base.
 .PHONY: lint
-lint: build tool-golangci-lint
-	golangci-lint run ./...
+lint: build
+	go tool golangci-lint run ./...
 
 #
 # GitHub Release
@@ -93,14 +99,35 @@ github-release: \
 	github-release-create
 
 #
+# Goreleaser
+#
+
+# Builds release assets for current platform (snapshot mode).
+.PHONY: goreleaser-snapshot
+goreleaser-snapshot:
+	go tool goreleaser build --snapshot --clean $(ARGS)
+
+# Builds release assets for all platforms (snapshot mode).
+.PHONY: goreleaser-snapshot-all
+goreleaser-snapshot-all:
+	go tool goreleaser build --snapshot --clean
+
+# Creates a full release (CI only).
+.PHONY: goreleaser-release
+goreleaser-release: github-preflight
+	go tool goreleaser release --clean
+
+#
 # Show help
 #
 .PHONY: help
 help: example-help
 	@echo ""
 	@echo "Targets:"
-	@echo "  build           		- Build the package (default)"
-	@echo "  github-release-create	- Create GitHub release"
-	@echo "  lint            		- Run linting"
-	@echo "  test            		- Run tests"
-	@echo "  help            		- Show help"
+	@echo "  build                   - Build the package (default)"
+	@echo "  github-release-create   - Create GitHub release (requires 'gh' in PATH)"
+	@echo "  goreleaser-snapshot     - Build release assets for current platform"
+	@echo "  goreleaser-release      - Create full release (CI only)"
+	@echo "  lint                    - Run linting"
+	@echo "  test                    - Run tests"
+	@echo "  help                    - Show help"
