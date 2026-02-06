@@ -8,6 +8,7 @@ import (
 	"github.com/redhat-appstudio/helmet/internal/config"
 	"github.com/redhat-appstudio/helmet/internal/integration"
 	"github.com/redhat-appstudio/helmet/internal/k8s"
+	"github.com/redhat-appstudio/helmet/internal/runcontext"
 
 	"github.com/spf13/cobra"
 )
@@ -41,7 +42,8 @@ func (b *IntegrationBitBucket) Cmd() *cobra.Command {
 // Complete is a no-op in this case.
 func (b *IntegrationBitBucket) Complete(_ []string) error {
 	var err error
-	b.cfg, err = bootstrapConfig(b.cmd.Context(), b.appCtx, b.kube)
+	runCtx := &runcontext.RunContext{Kube: b.kube, Logger: b.logger}
+	b.cfg, err = bootstrapConfig(b.cmd.Context(), b.appCtx, runCtx)
 	return err
 }
 

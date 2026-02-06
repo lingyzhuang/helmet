@@ -9,6 +9,7 @@ import (
 	"github.com/redhat-appstudio/helmet/internal/config"
 	"github.com/redhat-appstudio/helmet/internal/integration"
 	"github.com/redhat-appstudio/helmet/internal/k8s"
+	"github.com/redhat-appstudio/helmet/internal/runcontext"
 
 	"github.com/spf13/cobra"
 )
@@ -50,7 +51,8 @@ func (g *IntegrationGitHub) Cmd() *cobra.Command {
 // Complete captures the application name, and ensures it's ready to run.
 func (g *IntegrationGitHub) Complete(args []string) error {
 	var err error
-	g.cfg, err = bootstrapConfig(g.cmd.Context(), g.appCtx, g.kube)
+	runCtx := &runcontext.RunContext{Kube: g.kube, Logger: g.logger}
+	g.cfg, err = bootstrapConfig(g.cmd.Context(), g.appCtx, runCtx)
 	if err != nil {
 		return err
 	}

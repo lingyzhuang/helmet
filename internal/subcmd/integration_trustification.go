@@ -8,6 +8,7 @@ import (
 	"github.com/redhat-appstudio/helmet/internal/config"
 	"github.com/redhat-appstudio/helmet/internal/integration"
 	"github.com/redhat-appstudio/helmet/internal/k8s"
+	"github.com/redhat-appstudio/helmet/internal/runcontext"
 
 	"github.com/spf13/cobra"
 )
@@ -41,7 +42,8 @@ func (t *IntegrationTrustification) Cmd() *cobra.Command {
 // Complete is a no-op in this case.
 func (t *IntegrationTrustification) Complete(_ []string) error {
 	var err error
-	t.cfg, err = bootstrapConfig(t.cmd.Context(), t.appCtx, t.kube)
+	runCtx := &runcontext.RunContext{Kube: t.kube, Logger: t.logger}
+	t.cfg, err = bootstrapConfig(t.cmd.Context(), t.appCtx, runCtx)
 	return err
 }
 

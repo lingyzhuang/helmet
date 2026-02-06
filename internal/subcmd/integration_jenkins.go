@@ -8,6 +8,7 @@ import (
 	"github.com/redhat-appstudio/helmet/internal/config"
 	"github.com/redhat-appstudio/helmet/internal/integration"
 	"github.com/redhat-appstudio/helmet/internal/k8s"
+	"github.com/redhat-appstudio/helmet/internal/runcontext"
 
 	"github.com/spf13/cobra"
 )
@@ -41,7 +42,8 @@ func (j *IntegrationJenkins) Cmd() *cobra.Command {
 // Complete is a no-op in this case.
 func (j *IntegrationJenkins) Complete(_ []string) error {
 	var err error
-	j.cfg, err = bootstrapConfig(j.cmd.Context(), j.appCtx, j.kube)
+	runCtx := &runcontext.RunContext{Kube: j.kube, Logger: j.logger}
+	j.cfg, err = bootstrapConfig(j.cmd.Context(), j.appCtx, runCtx)
 	return err
 }
 

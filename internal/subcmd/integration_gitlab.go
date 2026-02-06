@@ -8,6 +8,7 @@ import (
 	"github.com/redhat-appstudio/helmet/internal/config"
 	"github.com/redhat-appstudio/helmet/internal/integration"
 	"github.com/redhat-appstudio/helmet/internal/k8s"
+	"github.com/redhat-appstudio/helmet/internal/runcontext"
 
 	"github.com/spf13/cobra"
 )
@@ -41,7 +42,8 @@ func (g *IntegrationGitLab) Cmd() *cobra.Command {
 // Complete is a no-op in this case.
 func (g *IntegrationGitLab) Complete(_ []string) error {
 	var err error
-	g.cfg, err = bootstrapConfig(g.cmd.Context(), g.appCtx, g.kube)
+	runCtx := &runcontext.RunContext{Kube: g.kube, Logger: g.logger}
+	g.cfg, err = bootstrapConfig(g.cmd.Context(), g.appCtx, runCtx)
 	return err
 }
 
