@@ -41,6 +41,12 @@ endif
 GITHUB_REF_NAME ?= ${GITHUB_REF_NAME:-}
 GITHUB_TOKEN ?= ${GITHUB_TOKEN:-}
 
+# Container image configuration.
+IMAGE_REPOSITORY ?= localhost:5001
+IMAGE_NAMESPACE  ?= helmet
+IMAGE_TAG        ?= $(COMMIT_ID)
+IMAGE            ?= $(IMAGE_REPOSITORY)/$(IMAGE_NAMESPACE)/$(EXAMPLE_APP):$(IMAGE_TAG)
+
 .EXPORT_ALL_VARIABLES:
 
 .DEFAULT_GOAL := build
@@ -86,6 +92,25 @@ $(INSTALLER_TARBALL): $(INSTALLER_TARBALL_DATA)
 .PHONY: run
 run: build
 	$(EXAMPLE_BIN) $(ARGS)
+
+# Builds the container image.
+.PHONY: image
+image: installer-tarball
+	@echo "Building container image: $(IMAGE)"
+	docker build -t $(IMAGE) -f $(EXAMPLE_DIR)/Dockerfile \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg COMMIT_ID=$(COMMIT_ID) \
+		.
+	@echo "Container image built successfully: $(IMAGE)"
+
+# Pushes the container image to the configured registry.
+.PHONY: image-push
+image-push:
+	@echo "Tagging image for push: $(IMAGE)"
+	docker tag $(IMAGE_TAG) $(IMAGE)
+	@echo "Pushing container image: $(IMAGE)"
+	docker push $(IMAGE)
+	@echo "Container image pushed successfully: $(IMAGE)"
 
 #
 # Tools
@@ -209,21 +234,53 @@ goreleaser-release: github-preflight
 
 KIND_CLUSTER_NAME ?= helmet-test
 KIND_CONFIG ?= test/kind-cluster.yaml
+KIND_REGISTRY_NAME ?= kind-registry
+KIND_REGISTRY_PORT ?= 5001
 
-# Creates a KinD cluster for testing
+# Create registry container if it doesn't exist, or start it if it's stopped
+.PHONY: kind-registry-up
+kind-registry-up:
+	@if [ -z "$$(docker ps -q -f name=$(KIND_REGISTRY_NAME))" ]; then \
+		if [ -n "$$(docker ps -aq -f name=$(KIND_REGISTRY_NAME))" ]; then \
+			echo "Starting existing registry container '$(KIND_REGISTRY_NAME)'..."; \
+			docker start $(KIND_REGISTRY_NAME); \
+		else \
+			echo "Creating registry container '$(KIND_REGISTRY_NAME)'..."; \
+			docker run -d --restart=always \
+				-p 127.0.0.1:$(KIND_REGISTRY_PORT):5000 \
+				--network bridge \
+				--name $(KIND_REGISTRY_NAME) \
+				registry:2; \
+		fi; \
+	fi
+
+# Creates a KinD cluster for testing with local registry
 .PHONY: kind-up
-kind-up:
+kind-up: kind-registry-up
 	@echo "Creating KinD cluster '$(KIND_CLUSTER_NAME)'..."
 	kind create cluster --name $(KIND_CLUSTER_NAME) --config $(KIND_CONFIG) --wait 60s
+	@echo "Connecting registry to cluster network..."
+	@docker network connect kind $(KIND_REGISTRY_NAME) 2>/dev/null || true
 	@echo "KinD cluster '$(KIND_CLUSTER_NAME)' is ready!"
+	@echo "Local registry available at: localhost:$(KIND_REGISTRY_PORT)"
 	@echo "Run: kubectl cluster-info --context kind-$(KIND_CLUSTER_NAME)"
 
 # Deletes the KinD cluster
 .PHONY: kind-down
-kind-down:
+kind-down: kind-registry-down
 	@echo "Deleting KinD cluster '$(KIND_CLUSTER_NAME)'..."
 	kind delete cluster --name $(KIND_CLUSTER_NAME)
 	@echo "KinD cluster '$(KIND_CLUSTER_NAME)' deleted."
+
+# Stops and removes the local registry
+.PHONY: kind-registry-down
+kind-registry-down:
+	@if [ -n "$$(docker ps -aq -f name=$(KIND_REGISTRY_NAME))" ]; then \
+		echo "Removing registry container '$(KIND_REGISTRY_NAME)'..."; \
+		docker rm -f $(KIND_REGISTRY_NAME); \
+	else \
+		echo "Registry '$(KIND_REGISTRY_NAME)' does not exist"; \
+	fi
 
 # Shows KinD cluster status
 .PHONY: kind-status
@@ -231,6 +288,11 @@ kind-status:
 	@kind get clusters 2>/dev/null | grep -q "$(KIND_CLUSTER_NAME)" && \
 		echo "KinD cluster '$(KIND_CLUSTER_NAME)' is running" || \
 		echo "KinD cluster '$(KIND_CLUSTER_NAME)' is not running"
+	@if [ -n "$$(docker ps -q -f name=$(KIND_REGISTRY_NAME))" ]; then \
+		echo "Registry '$(KIND_REGISTRY_NAME)' is running at localhost:$(KIND_REGISTRY_PORT)"; \
+	else \
+		echo "Registry '$(KIND_REGISTRY_NAME)' is not running"; \
+	fi
 
 #
 # Show help
@@ -243,6 +305,8 @@ help:
 	@echo "  clean                    - Remove build artifacts"
 	@echo "  installer-tarball        - Generate installer tarball"
 	@echo "  run                      - Build and run example (use ARGS='...')"
+	@echo "  image                    - Build container image (depends on installer-tarball)"
+	@echo "  image-push               - Push container image"
 	@echo "  test                     - Run tests"
 	@echo "  test-e2e-cli             - Run E2E CLI tests (requires KinD)"
 	@echo "  lint                     - Run linting"
@@ -250,7 +314,9 @@ help:
 	@echo "  github-release-create    - Create GitHub release (requires 'gh')"
 	@echo "  goreleaser-snapshot      - Build release assets for current platform"
 	@echo "  goreleaser-release       - Create full release (CI only)"
-	@echo "  kind-up                  - Create KinD cluster"
+	@echo "  kind-registry-up         - Create local Docker registry"
+	@echo "  kind-up                  - Create KinD cluster with local registry"
 	@echo "  kind-down                - Delete the KinD cluster"
-	@echo "  kind-status              - Show KinD cluster status"
+	@echo "  kind-registry-down       - Remove the local registry"
+	@echo "  kind-status              - Show KinD cluster and registry status"
 	@echo "  help                     - Show this help"

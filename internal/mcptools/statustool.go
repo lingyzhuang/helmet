@@ -178,7 +178,7 @@ product deployed:
 func (s *StatusTool) Init(mcpServer *server.MCPServer) {
 	mcpServer.AddTools([]server.ServerTool{{
 		Tool: mcp.NewTool(
-			s.appName+statusSuffix,
+			normalizeToolPrefix(s.appName)+statusSuffix,
 			mcp.WithDescription(`
 Reports the overall installer status, the first tool to be called to identify the
 installer status in the cluster and define the next tool to call.

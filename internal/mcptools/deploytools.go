@@ -116,7 +116,7 @@ You can follow the Kubernetes Job logs by running:
 func (d *DeployTools) Init(mcpServer *server.MCPServer) {
 	mcpServer.AddTools([]server.ServerTool{{
 		Tool: mcp.NewTool(
-			d.appName+deploySuffix,
+			normalizeToolPrefix(d.appName)+deploySuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 Deploys %s components to the cluster, using the cluster configuration to deploy
 the components sequentially. Note the "dry-run" flag: the deployment process will
