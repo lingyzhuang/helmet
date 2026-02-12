@@ -445,7 +445,7 @@ cluster.
 func (c *ConfigTools) Init(s *server.MCPServer) {
 	s.AddTools([]server.ServerTool{{
 		Tool: mcp.NewTool(
-			c.appName+configGetSuffix,
+			normalizeToolPrefix(c.appName)+configGetSuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 Get the existing %s configuration in the cluster, or return the default if none
 exists yet. Use the default configuration as the reference to create a new %s
@@ -456,7 +456,7 @@ configuration for the cluster.`,
 		Handler: c.getHandler,
 	}, {
 		Tool: mcp.NewTool(
-			c.appName+configInitSuffix,
+			normalizeToolPrefix(c.appName)+configInitSuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 Initializes the %s default configuration in the informed namespace, in case none
 exists yet.`,
@@ -474,7 +474,7 @@ The main namespace for %s ('.tssc.namespace'), where services will be deployed b
 		Handler: c.initHandler,
 	}, {
 		Tool: mcp.NewTool(
-			c.appName+configSettingsSuffix,
+			normalizeToolPrefix(c.appName)+configSettingsSuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 Modifies the top level settings, '.tssc.settings' in the configuration. It defines
 the global settings for the installer applied to all products. Use the tool %q to
@@ -499,7 +499,7 @@ The value for the informed key in '.tssc.settings' object.`,
 		Handler: c.configSettingsHandler,
 	}, {
 		Tool: mcp.NewTool(
-			c.appName+configProductEnabledSuffix,
+			normalizeToolPrefix(c.appName)+configProductEnabledSuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 Toggles a product status, enable or disable it a product for the %s installer
 scope. The installer will adequate the deployment topology to the enabled
@@ -523,7 +523,7 @@ Boolean value indicating whether the product should be enabled or not.`,
 		Handler: c.configProductEnableHandler,
 	}, {
 		Tool: mcp.NewTool(
-			c.appName+configProductNamespaceSuffix,
+			normalizeToolPrefix(c.appName)+configProductNamespaceSuffix,
 			mcp.WithDescription(`
 Updates the namespace for a given product, which means the primary product
 components will take place on the specified Kubernetes namespace.`,
@@ -545,7 +545,7 @@ The namespace where the product components will take place.`,
 		Handler: c.configProductNamespaceHandler,
 	}, {
 		Tool: mcp.NewTool(
-			c.appName+configProductPropertiesSuffix,
+			normalizeToolPrefix(c.appName)+configProductPropertiesSuffix,
 			mcp.WithDescription(`
 Updates the properties of a given product, the product '.properties' attributes
 will be updated using the informed object.`,

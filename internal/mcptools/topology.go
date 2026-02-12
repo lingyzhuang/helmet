@@ -72,7 +72,7 @@ The topology is a table with following columns:
 func (t *TopologyTool) Init(s *server.MCPServer) {
 	s.AddTools([]server.ServerTool{{
 		Tool: mcp.NewTool(
-			t.appName+topologySuffix,
+			normalizeToolPrefix(t.appName)+topologySuffix,
 			mcp.WithDescription(`
 Report the dependency topology of the installer based on the
 cluster configuration and installer dependencies (Helm charts).

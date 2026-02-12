@@ -157,7 +157,7 @@ You must inform at least one integration name via the '%s' argument`,
 func (i *IntegrationTools) Init(s *server.MCPServer) {
 	s.AddTools([]server.ServerTool{{
 		Tool: mcp.NewTool(
-			i.appName+integrationListSuffix,
+			normalizeToolPrefix(i.appName)+integrationListSuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 List and describe the %s integrations available for the user.`,
 				i.appName,
@@ -166,7 +166,7 @@ List and describe the %s integrations available for the user.`,
 		Handler: i.listHandler,
 	}, {
 		Tool: mcp.NewTool(
-			i.appName+integrationScaffoldSuffix,
+			normalizeToolPrefix(i.appName)+integrationScaffoldSuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 Scaffold the configuration required for a specific %s integration. The
 scaffolded configuration can be used as a reference to create the integration
@@ -184,7 +184,7 @@ The missing integrations that are mandatory for deployment.`,
 		Handler: i.scaffoldHandler,
 	}, {
 		Tool: mcp.NewTool(
-			i.appName+integrationStatusSuffix,
+			normalizeToolPrefix(i.appName)+integrationStatusSuffix,
 			mcp.WithDescription(`
 Detect whether the informed integration names are configured.`,
 			),
