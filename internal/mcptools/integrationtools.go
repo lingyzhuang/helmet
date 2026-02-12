@@ -15,6 +15,7 @@ import (
 
 type IntegrationTools struct {
 	appName        string                   // application name
+	cliName        string                   // original name for CLI
 	integrationCmd *cobra.Command           // integration subcommand
 	cm             *config.ConfigMapManager // configuration manager
 	im             *integrations.Manager    // integrations manager
@@ -71,7 +72,7 @@ For security, automated agents **MUST NOT** execute these commands.
 Users **MUST** manually copy and paste the example "%s integration" command, then
 fill in the "OVERWRITE_ME" placeholders on a dedicated terminal session. For more
 details, run "%s integration <name> --help".`,
-		i.appName, i.appName, i.appName,
+		i.cliName, i.cliName, i.cliName,
 	))
 
 	names := ctr.GetStringSlice(NamesArg, []string{})
@@ -90,7 +91,7 @@ You must inform the %q argument, with the integration name(s)!`,
 	for _, name := range names {
 		if sc, ok := byName[name]; ok {
 			output.WriteString("\n\n")
-			output.WriteString(generateIntegrationSubCmdUsage(i.appName, sc))
+			output.WriteString(generateIntegrationSubCmdUsage(i.cliName, sc))
 			output.WriteString("\n\n")
 		} else {
 			unknown = append(unknown, name)
@@ -157,7 +158,7 @@ You must inform at least one integration name via the '%s' argument`,
 func (i *IntegrationTools) Init(s *server.MCPServer) {
 	s.AddTools([]server.ServerTool{{
 		Tool: mcp.NewTool(
-			normalizeToolPrefix(i.appName)+integrationListSuffix,
+			i.appName+integrationListSuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 List and describe the %s integrations available for the user.`,
 				i.appName,
@@ -166,12 +167,12 @@ List and describe the %s integrations available for the user.`,
 		Handler: i.listHandler,
 	}, {
 		Tool: mcp.NewTool(
-			normalizeToolPrefix(i.appName)+integrationScaffoldSuffix,
+			i.appName+integrationScaffoldSuffix,
 			mcp.WithDescription(fmt.Sprintf(`
 Scaffold the configuration required for a specific %s integration. The
 scaffolded configuration can be used as a reference to create the integration
 using the '%s integration <name> ...' command.`,
-				i.appName, i.appName,
+				i.cliName, i.cliName,
 			)),
 			mcp.WithArray(
 				NamesArg,
@@ -184,7 +185,7 @@ The missing integrations that are mandatory for deployment.`,
 		Handler: i.scaffoldHandler,
 	}, {
 		Tool: mcp.NewTool(
-			normalizeToolPrefix(i.appName)+integrationStatusSuffix,
+			i.appName+integrationStatusSuffix,
 			mcp.WithDescription(`
 Detect whether the informed integration names are configured.`,
 			),
@@ -202,12 +203,14 @@ The integration names to check the status for.`,
 
 func NewIntegrationTools(
 	appName string,
+	cliName string,
 	integrationCmd *cobra.Command,
 	cm *config.ConfigMapManager,
 	im *integrations.Manager,
 ) *IntegrationTools {
 	return &IntegrationTools{
 		appName:        appName,
+		cliName:        cliName,
 		integrationCmd: integrationCmd,
 		cm:             cm,
 		im:             im,

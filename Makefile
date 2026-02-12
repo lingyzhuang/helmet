@@ -54,7 +54,7 @@ IMAGE            ?= $(IMAGE_REPOSITORY)/$(IMAGE_NAMESPACE)/$(EXAMPLE_APP):$(IMAG
 #
 # Build
 #
- 
+
 # Build the example application.
 .PHONY: build
 build: $(EXAMPLE_BIN)
@@ -105,12 +105,8 @@ image: installer-tarball
 
 # Pushes the container image to the configured registry.
 .PHONY: image-push
-image-push:
-	@echo "Tagging image for push: $(IMAGE)"
-	docker tag $(IMAGE_TAG) $(IMAGE)
-	@echo "Pushing container image: $(IMAGE)"
+image-push: image
 	docker push $(IMAGE)
-	@echo "Container image pushed successfully: $(IMAGE)"
 
 #
 # Tools
@@ -307,7 +303,7 @@ help:
 	@echo "  run                      - Build and run example (use ARGS='...')"
 	@echo "  image                    - Build container image (depends on installer-tarball)"
 	@echo "  image-push               - Push container image"
-	@echo "  test                     - Run tests"
+	@echo "  test-unit                - Run unit tests"
 	@echo "  test-e2e-cli             - Run E2E CLI tests (requires KinD)"
 	@echo "  lint                     - Run linting"
 	@echo "  security                 - Run govulncheck vulnerability scan"
