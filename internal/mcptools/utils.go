@@ -46,7 +46,3 @@ func generateIntegrationSubCmdUsage(appName string, cmd *cobra.Command) string {
 		"## `%s` Subcommand Usage\n%s\nExample:\n\n\t%s\n",
 		cmd.Name(), cmd.Long, usage.String())
 }
-
-func normalizeToolPrefix(appName string) string {
-	return strings.ReplaceAll(appName, "-", "_")
-}

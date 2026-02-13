@@ -47,7 +47,8 @@ func standardMCPTools(
 	job := installer.NewJob(toolsCtx.AppContext, toolsCtx.Kube)
 
 	// Status tool.
-	statusTool := mcptools.NewStatusTool(toolsCtx.AppContext.Name, cm, tb, job)
+	statusTool := mcptools.NewStatusTool(
+		toolsCtx.AppContext.IdentifierName(), cm, tb, job)
 
 	// Integration tools, creates its own instance for metadata introspection.
 	integrationCmd := NewIntegration(
@@ -56,16 +57,17 @@ func standardMCPTools(
 		toolsCtx.IntegrationManager,
 	)
 	integrationTools := mcptools.NewIntegrationTools(
-		toolsCtx.AppContext.Name, integrationCmd, cm, toolsCtx.IntegrationManager,
+		toolsCtx.AppContext.IdentifierName(), toolsCtx.AppContext.Name,
+		integrationCmd, cm, toolsCtx.IntegrationManager,
 	)
 
 	// Deploy tools.
 	deployTools := mcptools.NewDeployTools(
-		toolsCtx.AppContext.Name, cm, tb, job, toolsCtx.Image)
+		toolsCtx.AppContext.IdentifierName(), cm, tb, job, toolsCtx.Image)
 
 	// Notes tool.
 	notesTool := mcptools.NewNotesTool(
-		toolsCtx.AppContext.Name,
+		toolsCtx.AppContext.IdentifierName(),
 		toolsCtx.Logger,
 		toolsCtx.Flags,
 		toolsCtx.Kube,
@@ -76,7 +78,7 @@ func standardMCPTools(
 
 	// Topology tool
 	topologyTool := mcptools.NewTopologyTool(
-		toolsCtx.AppContext.Name, toolsCtx.ChartFS, cm, tb)
+		toolsCtx.AppContext.IdentifierName(), toolsCtx.ChartFS, cm, tb)
 
 	return []mcptools.Interface{
 		configTools,

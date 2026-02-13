@@ -116,7 +116,7 @@ Unable to get "NOTES.txt" for the chart %q on namespace %q.`,
 func (n *NotesTool) Init(s *server.MCPServer) {
 	s.AddTools([]server.ServerTool{{
 		Tool: mcp.NewTool(
-			normalizeToolPrefix(n.appName)+notesSuffix,
+			n.appName+notesSuffix,
 			mcp.WithDescription(`
 Retrieve the service notes, the initial coordinates to utilize services deployed
 by this installer, from the informed product name.`,
