@@ -1,7 +1,10 @@
 ---
 name: CodeCov
 description: "Reports testing coverage for the repository"
-
+inputs:
+  token:
+    description: "Codecov upload token"
+    required: true
 runs:
   using: composite
   steps:
@@ -11,4 +14,4 @@ runs:
         file: ./coverage.out
         flags: unittests
         fail_ci_if_error: false
-        token: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ inputs.token }}
