@@ -289,6 +289,22 @@ kind-status:
 		echo "# Registry '$(KIND_REGISTRY_NAME)' is not running"; \
 	fi
 
+# Verifies module integrity and ensures go.mod/go.sum are clean.
+.PHONY: verify-mod
+verify-mod:
+	go mod verify
+	go mod tidy
+	git diff --exit-code go.mod go.sum
+
+# Orchestrates the release process.
+.PHONY: release
+release: build test-unit lint verify-mod
+ifndef GITHUB_REF_NAME
+	$(error GITHUB_REF_NAME is required. Usage: make release GITHUB_REF_NAME=v0.1.0-beta.1)
+endif
+	./hack/release.sh $(GITHUB_REF_NAME)
+	$(MAKE) github-release GITHUB_REF_NAME=$(GITHUB_REF_NAME)
+
 #
 # Show help
 #
@@ -313,4 +329,5 @@ help:
 	@echo "  kind-up                  - Create KinD cluster with local registry"
 	@echo "  kind-down                - Delete KinD cluster and registry"
 	@echo "  kind-status              - Show KinD cluster and registry status"
+	@echo "  release                  - Orchestrate release process (requires GITHUB_REF_NAME)"
 	@echo "  help                     - Show this help"
