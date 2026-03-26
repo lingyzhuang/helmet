@@ -41,6 +41,7 @@ endif
 # variables, and credentials needed to push the release.
 GITHUB_REF_NAME ?= ${GITHUB_REF_NAME:-}
 GITHUB_TOKEN ?= ${GITHUB_TOKEN:-}
+GITHUB_REPOSITORY ?= lingyzhuang/helmet
 
 # Container image configuration, either podman or docker.
 CONTAINER_CLI ?= $(shell command -v podman >/dev/null 2>&1 && echo podman || echo docker)
@@ -217,8 +218,8 @@ endif
 # Creates a new GitHub release with GITHUB_REF_NAME.
 .PHONY: github-release-create
 github-release-create: tool-gh
-	gh release view $(GITHUB_REF_NAME) >/dev/null 2>&1 || \
-		gh release create --generate-notes $(GITHUB_REF_NAME)
+	gh release view $(GITHUB_REF_NAME) --repo $(GITHUB_REPOSITORY) >/dev/null 2>&1 || \
+	gh release create --generate-notes $(GITHUB_REF_NAME) --repo $(GITHUB_REPOSITORY)
 
 # Releases the GITHUB_REF_NAME.
 github-release: \
